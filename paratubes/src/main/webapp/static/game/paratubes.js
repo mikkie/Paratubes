@@ -6,7 +6,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
     this.fill();
     this.restore();
    };
-
+   //圆形擦除
    CanvasRenderingContext2D.prototype.clearArc = function(x, y, radius, startAngle, endAngle, anticlockwise) {
     this.beginPath();
     this.arc(x, y, radius, startAngle, endAngle, anticlockwise);
@@ -164,7 +164,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
       curPainter.mouseUp(e); 
    }});
 
-
+   //键盘事件
    game.addKeyListener({
      key : 'left arrow',
      listener : function() {
@@ -185,7 +185,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
      }
    });
 
-
+   //更新画笔 
    $('.painter').click(function() {
       updatePainter($(this).attr('name'));
    });
@@ -298,7 +298,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
            }
          }
          ];
-         //run left actions
+   //run left actions
    var run_leftActions = [
          {
            lastAdvance : 0,
@@ -411,6 +411,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
      pushTimer.start();
    }
    
+   //hero精灵
    var heroSprite = new Sprite('userAvatar',hero.painter.stand,hero.actions.stand);
    heroSprite.top = hero.top;
    heroSprite.left = hero.left;
