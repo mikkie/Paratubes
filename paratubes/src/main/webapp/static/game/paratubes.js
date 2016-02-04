@@ -329,7 +329,6 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
                   }
                   if(this.lastMove !== 0){
                     sprite.left -= (now - this.lastMove)/1000 * sprite.velocityX;
-                    DEBUGGER.log("run left " + sprite.left + ' lastMove ' + this.lastMove);
                   }
                   this.lastMove = now;
                }
@@ -357,6 +356,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
                   }
                   if(run_right_Timer.isOver()){
                      run_right_Timer.stop();
+                     DEBUGGER.log('a run_right_Timer stop');
                   }
               }
               else{
@@ -370,6 +370,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
                if (run_right_Timer.isRunning()) {
                   if(run_right_Timer.isOver()){
                      this.stop();
+                     return;
                   }
                   if(this.lastMove !== 0){
                     var tmp = (now - this.lastMove)/1000 * sprite.velocityX;
@@ -384,7 +385,6 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
                   heroSprite.painter = standPainter;
                   heroSprite.behaviors = standActions;
                }
-               DEBUGGER.log('lastMove ' + this.lastMove);
             },
             stop : function(){
                run_right_Timer.stop();
