@@ -165,6 +165,27 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
    }});
 
 
+   game.addKeyListener({
+     key : 'left arrow',
+     listener : function() {
+        run_rightActions[1].stop();   
+        restartAnimation(run_left_Timer); 
+        heroSprite.painter = run_leftPainter;
+        heroSprite.behaviors = run_leftActions;
+     }
+   });
+
+   game.addKeyListener({
+     key : 'right arrow',
+     listener : function() {
+        run_leftActions[1].stop();
+        restartAnimation(run_right_Timer); 
+        heroSprite.painter = run_rightPainter;
+        heroSprite.behaviors = run_rightActions;
+     }
+   });
+
+
    $('.painter').click(function() {
       updatePainter($(this).attr('name'));
    });
@@ -210,11 +231,38 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
        playContext.drawImage(drawCanvas,0,0,drawCanvas.width,drawCanvas.height);
    };
 
+   //精灵表 
+   var spritesheet = {
+       hero : {
+          stand : {
+            src : ctx + '/static/images/game/people/man/stand.png',
+            image : new Image() 
+          },
+          run_left : {
+            src : ctx + '/static/images/game/people/man/run_left.png',
+            image : new Image() 
+          },
+          run_right : {
+            src : ctx + '/static/images/game/people/man/run_right.png',
+            image : new Image()
+          }
+       }
+   };
 
-   //精灵 
-   var hero = {
-       painter : {
-         run_right : new SpriteSheetPainter([
+   //右键定时器        
+   var run_left_Timer = new AnimationTimer(225);
+   //右键定时器        
+   var run_right_Timer = new AnimationTimer(225);
+   //stand painter
+   var standPainter = new SpriteSheetPainter([
+         { left: 0,   top: 0, width: 20, height: 50 },
+         { left: 20,   top: 0, width: 20, height: 50 },
+         { left: 40,   top: 0, width: 23, height: 50 },
+         { left: 63,   top: 0, width: 20, height: 50 },
+         { left: 83,   top: 0, width: 20, height: 50 }
+         ],spritesheet.hero.stand.image);
+   //run left painter
+   var run_leftPainter = new SpriteSheetPainter([
          { left: 0,   top: 0, width: 30, height: 50 },
          { left: 30,   top: 0, width: 34, height: 50 },
          { left: 64,   top: 0, width: 41, height: 50 },
@@ -224,13 +272,24 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
          { left: 201,   top: 0, width: 20, height: 50 },
          { left: 221,   top: 0, width: 21, height: 50 },
          { left: 242,   top: 0, width: 25, height: 50 }
-         ]) 
-       },
-       actions : {
-         run_right : [
+         ],spritesheet.hero.run_left.image); 
+   //run right painter
+   var run_rightPainter = new SpriteSheetPainter([
+         { left: 0,   top: 0, width: 30, height: 50 },
+         { left: 30,   top: 0, width: 34, height: 50 },
+         { left: 64,   top: 0, width: 41, height: 50 },
+         { left: 105,   top: 0, width: 36, height: 50 },
+         { left: 141,   top: 0, width: 33, height: 50 },
+         { left: 174,   top: 0, width: 27, height: 50 },
+         { left: 201,   top: 0, width: 20, height: 50 },
+         { left: 221,   top: 0, width: 21, height: 50 },
+         { left: 242,   top: 0, width: 25, height: 50 }
+         ],spritesheet.hero.run_right.image); 
+   //stand actions
+   var standActions = [
          {
            lastAdvance : 0,
-           INTERVAL : 50,
+           INTERVAL : 80,
            execute : function(sprite,context,now) {
               if(now - this.lastAdvance > this.INTERVAL){
                 sprite.painter.advance();
@@ -238,23 +297,160 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
               }
            }
          }
-         ]   
-       },
+         ];
+         //run left actions
+   var run_leftActions = [
+         {
+           lastAdvance : 0,
+           INTERVAL : 80,
+           execute : function(sprite,context,now) {
+              if (run_left_Timer.isRunning()) {
+                  if(now - this.lastAdvance > this.INTERVAL){
+                    sprite.painter.advance();
+                    this.lastAdvance = now;
+                  }
+                  if(run_left_Timer.isOver()){
+                     run_left_Timer.stop();
+                  }
+              }
+              else{
+                  heroSprite.painter = standPainter;
+                  heroSprite.behaviors = standActions;
+              }
+           }
+         },{
+            lastMove : 0,
+            execute : function(sprite,context,now) {
+               if (run_left_Timer.isRunning()) {
+                  //定时器超时
+                  if(run_left_Timer.isOver()){
+                     this.stop();
+                     return;
+                  }
+                  if(this.lastMove !== 0){
+                    sprite.left -= (now - this.lastMove)/1000 * sprite.velocityX;
+                    DEBUGGER.log("run left " + sprite.left + ' lastMove ' + this.lastMove);
+                  }
+                  this.lastMove = now;
+               }
+               else{
+                  heroSprite.painter = standPainter;
+                  heroSprite.behaviors = standActions;
+               }
+            },
+            stop : function(){
+               run_left_Timer.stop();
+               this.lastMove = 0;
+            }
+         }
+         ];       
+   //run right actions
+   var run_rightActions = [
+         {
+           lastAdvance : 0,
+           INTERVAL : 80,
+           execute : function(sprite,context,now) {
+              if (run_right_Timer.isRunning()) {
+                  if(now - this.lastAdvance > this.INTERVAL){
+                    sprite.painter.advance();
+                    this.lastAdvance = now;
+                  }
+                  if(run_right_Timer.isOver()){
+                     run_right_Timer.stop();
+                  }
+              }
+              else{
+                  heroSprite.painter = standPainter;
+                  heroSprite.behaviors = standActions;
+              }
+           }
+         },{
+            lastMove : 0,
+            execute : function(sprite,context,now) {
+               if (run_right_Timer.isRunning()) {
+                  if(run_right_Timer.isOver()){
+                     this.stop();
+                  }
+                  if(this.lastMove !== 0){
+                    var tmp = (now - this.lastMove)/1000 * sprite.velocityX;
+                    if(tmp > 20){
+                      debugger;  
+                    }
+                    sprite.left += tmp;
+                  }
+                  this.lastMove = now;
+               }
+               else{
+                  heroSprite.painter = standPainter;
+                  heroSprite.behaviors = standActions;
+               }
+               DEBUGGER.log('lastMove ' + this.lastMove);
+            },
+            stop : function(){
+               run_right_Timer.stop();
+               this.lastMove = 0;
+            } 
+         }
+         ];       
+   //精灵 
+   var hero = {
        top : 50,
-       left : 50,
-       spritesheet : new Image()
+       left : 550,
+       velocityX : 200,
+       spritesheet : new Image(),
+       painter : {
+         stand : standPainter, 
+         run_right : run_rightPainter
+       },
+       actions : {
+         stand : standActions,
+         run_right : run_rightActions   
+       }
    };
+
+   //重启定时器 
+   function restartAnimation(pushTimer) {
+     if (pushTimer.isRunning()) {
+        pushTimer.stop();
+     }
+     pushTimer.start();
+   }
    
-   var heroSprite = new Sprite('userAvatar',hero.painter.run_right,hero.actions.run_right);
+   var heroSprite = new Sprite('userAvatar',hero.painter.stand,hero.actions.stand);
    heroSprite.top = hero.top;
    heroSprite.left = hero.left;
+   heroSprite.velocityX = hero.velocityX;
    game.addSprite(heroSprite);
 
+   //加载图片
+   (function loadImage() {
+      var count = 0;
+      for(var i in spritesheet){
+          for(var j in spritesheet[i]){
+             spritesheet[i][j].image.src = spritesheet[i][j].src;
+             spritesheet[i][j].image.onload = function() {
+                 count++;
+                 if(count == 1){
+                    game.start();
+                 }
+             }
+          }
+      }
+   })();
 
-   //初始化
-   hero.spritesheet.src = ctx + '/static/images/game/people/man/run_right.png';
-   spritesheet.onload = function() {
-       game.start();
-   }; 
 
+   //调试
+   var DEBUGGER = {
+      tag : true,
+      log : function(msg){
+         if(this.tag){
+            console.log(msg);
+         } 
+      },
+      run : function(callback){
+         if(this.tag){
+            callback.call();
+         }
+      }
+   };
 };

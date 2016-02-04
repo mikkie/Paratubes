@@ -46,6 +46,8 @@
 	<script src='${rc.getContextPath()}/static/game/shared/Interface.js'></script>
 	<script src='${rc.getContextPath()}/static/game/shared/Library.js'></script>
 	<script src='${rc.getContextPath()}/static/game/shared/requestNextAnimationFrame.js'></script>
+  <script src='${rc.getContextPath()}/static/game/shared/stopwatch.js'></script>
+  <script src='${rc.getContextPath()}/static/game/shared/animationTimer.js'></script>
 	<script src='${rc.getContextPath()}/static/game/shared/sprites.js'></script>
 	<script src='${rc.getContextPath()}/static/game/shared/gameEngine.js'></script>
 	<script src='${rc.getContextPath()}/static/game/paratubes.js'></script>
