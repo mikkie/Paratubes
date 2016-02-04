@@ -356,7 +356,6 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
                   }
                   if(run_right_Timer.isOver()){
                      run_right_Timer.stop();
-                     DEBUGGER.log('a run_right_Timer stop');
                   }
               }
               else{
@@ -373,11 +372,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
                      return;
                   }
                   if(this.lastMove !== 0){
-                    var tmp = (now - this.lastMove)/1000 * sprite.velocityX;
-                    if(tmp > 20){
-                      debugger;  
-                    }
-                    sprite.left += tmp;
+                    sprite.left += (now - this.lastMove)/1000 * sprite.velocityX;
                   }
                   this.lastMove = now;
                }
