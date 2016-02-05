@@ -59,8 +59,14 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
    	  mouseMove : function(e) {
    	     if(isMouseDown){
            var loc = windowToCanvas(playCanvas, e.clientX, e.clientY);	 
+           // if(loc.x < 0 || loc.y < 0 || loc.x > playCanvas.width || loc.y > playCanvas.height){
+           //     isMouseDown = false;
+           //     drawContext.restore();
+           //     return; 
+           // }
            drawContext.lineTo(loc.x,loc.y);
            drawContext.stroke();
+           DEBUGGER.log(loc.x + ',' + loc.y);
          }   
    	  },
    	  mouseUp : function(e) {
@@ -168,20 +174,20 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
    game.addKeyListener({
      key : 'left arrow',
      listener : function() {
-        run_rightActions[1].stop();   
-        restartAnimation(run_left_Timer); 
-        heroSprite.painter = run_leftPainter;
-        heroSprite.behaviors = run_leftActions;
+        hero.actions.run_right[1].stop();   
+        restartAnimation(hero.timers.run_left); 
+        heroSprite.painter = hero.painters.run_left;
+        heroSprite.behaviors = hero.actions.run_left;
      }
    });
 
    game.addKeyListener({
      key : 'right arrow',
      listener : function() {
-        run_leftActions[1].stop();
-        restartAnimation(run_right_Timer); 
-        heroSprite.painter = run_rightPainter;
-        heroSprite.behaviors = run_rightActions;
+        hero.actions.run_left[1].stop();
+        restartAnimation(hero.timers.run_right); 
+        heroSprite.painter = hero.painters.run_right;
+        heroSprite.behaviors = hero.actions.run_right;
      }
    });
 
@@ -229,7 +235,8 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
        drawGrid(); 
        //test
        playContext.drawImage(drawCanvas,0,0,drawCanvas.width,drawCanvas.height);
-   };
+   }; 
+
 
    //精灵表 
    var spritesheet = {
@@ -249,20 +256,25 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
        }
    };
 
-   //右键定时器        
-   var run_left_Timer = new AnimationTimer(225);
-   //右键定时器        
-   var run_right_Timer = new AnimationTimer(225);
-   //stand painter
-   var standPainter = new SpriteSheetPainter([
+   //精灵 
+   var hero = {
+       top : 50,
+       left : 550,
+       velocityX : 200,
+       spritesheet : new Image(),
+       timers : {
+         run_left : new AnimationTimer(225),
+         run_right : new AnimationTimer(225) 
+       },
+       painters : {
+         stand : new SpriteSheetPainter([
          { left: 0,   top: 0, width: 20, height: 50 },
          { left: 20,   top: 0, width: 20, height: 50 },
          { left: 40,   top: 0, width: 23, height: 50 },
          { left: 63,   top: 0, width: 20, height: 50 },
          { left: 83,   top: 0, width: 20, height: 50 }
-         ],spritesheet.hero.stand.image);
-   //run left painter
-   var run_leftPainter = new SpriteSheetPainter([
+         ],spritesheet.hero.stand.image),
+         run_left : new SpriteSheetPainter([
          { left: 0,   top: 0, width: 30, height: 50 },
          { left: 30,   top: 0, width: 34, height: 50 },
          { left: 64,   top: 0, width: 41, height: 50 },
@@ -272,9 +284,8 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
          { left: 201,   top: 0, width: 20, height: 50 },
          { left: 221,   top: 0, width: 21, height: 50 },
          { left: 242,   top: 0, width: 25, height: 50 }
-         ],spritesheet.hero.run_left.image); 
-   //run right painter
-   var run_rightPainter = new SpriteSheetPainter([
+         ],spritesheet.hero.run_left.image),
+         run_right : new SpriteSheetPainter([
          { left: 0,   top: 0, width: 30, height: 50 },
          { left: 30,   top: 0, width: 34, height: 50 },
          { left: 64,   top: 0, width: 41, height: 50 },
@@ -284,9 +295,10 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
          { left: 201,   top: 0, width: 20, height: 50 },
          { left: 221,   top: 0, width: 21, height: 50 },
          { left: 242,   top: 0, width: 25, height: 50 }
-         ],spritesheet.hero.run_right.image); 
-   //stand actions
-   var standActions = [
+         ],spritesheet.hero.run_right.image)
+       },
+       actions : {
+         stand : [
          {
            lastAdvance : 0,
            INTERVAL : 80,
@@ -297,33 +309,32 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
               }
            }
          }
-         ];
-   //run left actions
-   var run_leftActions = [
+         ],
+         run_left : [
          {
            lastAdvance : 0,
            INTERVAL : 80,
            execute : function(sprite,context,now) {
-              if (run_left_Timer.isRunning()) {
+              if (hero.timers.run_left.isRunning()) {
                   if(now - this.lastAdvance > this.INTERVAL){
                     sprite.painter.advance();
                     this.lastAdvance = now;
                   }
-                  if(run_left_Timer.isOver()){
-                     run_left_Timer.stop();
+                  if(hero.timers.run_left.isOver()){
+                     hero.timers.run_left.stop();
                   }
               }
               else{
-                  heroSprite.painter = standPainter;
-                  heroSprite.behaviors = standActions;
+                  heroSprite.painter = hero.painters.stand;
+                  heroSprite.behaviors = hero.actions.stand;
               }
            }
          },{
             lastMove : 0,
             execute : function(sprite,context,now) {
-               if (run_left_Timer.isRunning()) {
+               if (hero.timers.run_left.isRunning()) {
                   //定时器超时
-                  if(run_left_Timer.isOver()){
+                  if(hero.timers.run_left.isOver()){
                      this.stop();
                      return;
                   }
@@ -333,41 +344,40 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
                   this.lastMove = now;
                }
                else{
-                  heroSprite.painter = standPainter;
-                  heroSprite.behaviors = standActions;
+                  heroSprite.painter = hero.painters.stand;
+                  heroSprite.behaviors = hero.actions.stand;
                }
             },
             stop : function(){
-               run_left_Timer.stop();
+               hero.timers.run_left.stop();
                this.lastMove = 0;
             }
          }
-         ];       
-   //run right actions
-   var run_rightActions = [
+         ],
+         run_right : [
          {
            lastAdvance : 0,
            INTERVAL : 80,
            execute : function(sprite,context,now) {
-              if (run_right_Timer.isRunning()) {
+              if (hero.timers.run_right.isRunning()) {
                   if(now - this.lastAdvance > this.INTERVAL){
                     sprite.painter.advance();
                     this.lastAdvance = now;
                   }
-                  if(run_right_Timer.isOver()){
-                     run_right_Timer.stop();
+                  if(hero.timers.run_right.isOver()){
+                     hero.timers.run_right.stop();
                   }
               }
               else{
-                  heroSprite.painter = standPainter;
-                  heroSprite.behaviors = standActions;
+                  heroSprite.painter = hero.painters.stand;
+                  heroSprite.behaviors = hero.actions.stand;
               }
            }
          },{
             lastMove : 0,
             execute : function(sprite,context,now) {
-               if (run_right_Timer.isRunning()) {
-                  if(run_right_Timer.isOver()){
+               if (hero.timers.run_right.isRunning()) {
+                  if(hero.timers.run_right.isOver()){
                      this.stop();
                      return;
                   }
@@ -377,29 +387,16 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
                   this.lastMove = now;
                }
                else{
-                  heroSprite.painter = standPainter;
-                  heroSprite.behaviors = standActions;
+                  heroSprite.painter = hero.painters.stand;
+                  heroSprite.behaviors = hero.actions.stand;
                }
             },
             stop : function(){
-               run_right_Timer.stop();
+               hero.timers.run_right.stop();
                this.lastMove = 0;
             } 
          }
-         ];       
-   //精灵 
-   var hero = {
-       top : 50,
-       left : 550,
-       velocityX : 200,
-       spritesheet : new Image(),
-       painter : {
-         stand : standPainter, 
-         run_right : run_rightPainter
-       },
-       actions : {
-         stand : standActions,
-         run_right : run_rightActions   
+         ]   
        }
    };
 
@@ -412,7 +409,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
    }
    
    //hero精灵
-   var heroSprite = new Sprite('userAvatar',hero.painter.stand,hero.actions.stand);
+   var heroSprite = new Sprite('userAvatar',hero.painters.stand,hero.actions.stand);
    heroSprite.top = hero.top;
    heroSprite.left = hero.left;
    heroSprite.velocityX = hero.velocityX;
