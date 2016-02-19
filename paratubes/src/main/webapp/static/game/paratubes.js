@@ -33,7 +33,8 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
        mousePos = {
           x : 0,
           y : 0
-       };
+       },
+       drawingSurfaceImageData;
    //离屏画布
    var drawContext = (function() {
       drawCanvas.width = playCanvas.width;
@@ -46,10 +47,23 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
    playCanvas.style.cursor = 'crosshair';
    //绘图工具类接口  
    var Painter = new Interface('Painter',['mouseDown','mouseMove','mouseUp']);
+   //保存绘图表面
+   var saveDrawingSurface = function() {
+      drawingSurfaceImageData = drawContext.getImageData(0, 0,
+                             drawCanvas.width,
+                             drawCanvas.height);
+   };
+   //恢复绘图表面
+   var restoreDrawingSurface = function() {
+      drawContext.putImageData(drawingSurfaceImageData, 0, 0);
+   };
+
    //各种画笔
    var pen = {
    	  name : 'pen',
    	  mouseDown : function(e) {
+         //先保存原有的绘图表面数据
+         saveDrawingSurface();
    	  	 isMouseDown = true;
    	  	 drawContext.save();
    	  	 drawContext.beginPath();
@@ -59,17 +73,17 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
    	  mouseMove : function(e) {
    	     if(isMouseDown){
            var loc = windowToCanvas(playCanvas, e.clientX, e.clientY);	 
-           // if(loc.x < 0 || loc.y < 0 || loc.x > playCanvas.width || loc.y > playCanvas.height){
-           //     isMouseDown = false;
-           //     drawContext.restore();
-           //     return; 
-           // }
            drawContext.lineTo(loc.x,loc.y);
            drawContext.stroke();
            DEBUGGER.log(loc.x + ',' + loc.y);
          }   
    	  },
    	  mouseUp : function(e) {
+         //恢复原有的绘图表面数据
+         restoreDrawingSurface();
+         var loc = windowToCanvas(playCanvas, e.clientX, e.clientY);
+         drawContext.lineTo(loc.x,loc.y);
+         drawContext.stroke();
    	  	 isMouseDown = false;
    	  	 drawContext.restore();
    	  }
