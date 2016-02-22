@@ -83,11 +83,6 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
          }   
    	  },
    	  mouseUp : function(e) {
-         //恢复原有的绘图表面数据
-         restoreDrawingSurface();
-         var loc = windowToCanvas(playCanvas, e.clientX, e.clientY);
-         drawContext.lineTo(loc.x,loc.y);
-         drawContext.stroke();
          ///恢复原有的绘图表面数据
          if(isMouseDown){
            restoreDrawingSurface();
