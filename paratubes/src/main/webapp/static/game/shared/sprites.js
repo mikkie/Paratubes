@@ -71,9 +71,11 @@ SpriteSheetPainter.prototype = {
    cells: [],
    cellIndex: 0,
 
-   advance: function () {
+   advance: function (noLoop) {
       if (this.cellIndex == this.cells.length-1) {
-         this.cellIndex = 0;
+         if(!noLoop){
+           this.cellIndex = 0;
+         }
       }
       else {
          this.cellIndex++;
