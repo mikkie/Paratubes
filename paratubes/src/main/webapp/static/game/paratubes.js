@@ -34,7 +34,11 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
           x : 0,
           y : 0
        },
-       drawingSurfaceImageData;
+       drawingSurfaceImageData,
+       //重力加速度m/s2
+       GRAVITY_FORCE = 9.8,
+       //每米对应的像素
+       PIX_PER_METER = 50 / 1.75;
    //离屏画布
    var drawContext = (function() {
       drawCanvas.width = playCanvas.width;
@@ -195,6 +199,9 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
    game.addKeyListener({
      key : 'left arrow',
      listener : function() {
+        if(heroSprite.state == 'fall_right'){
+           return false;
+        }
         hero.actions.run_right[1].stop();
         hero.actions.jump_right[1].stop();   
         restartAnimation(hero.timers.run_left); 
@@ -206,6 +213,9 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
    game.addKeyListener({
      key : 'right arrow',
      listener : function() {
+        if(heroSprite.state == 'fall_right'){
+           return false;
+        }
         hero.actions.run_left[1].stop();
         hero.actions.jump_right[1].stop();
         restartAnimation(hero.timers.run_right); 
@@ -218,6 +228,9 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
    game.addKeyListener({
      key : 'up arrow',
      listener : function() {
+        if(heroSprite.state == 'fall_right'){
+           return false;
+        }
         hero.actions.run_left[1].stop();
         hero.actions.run_right[1].stop();
         restartAnimation(hero.timers.jump_right); 
@@ -306,7 +319,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
 
    //精灵 
    var hero = {
-       top : 450,
+       top : playCanvas.height - 50,
        left : 550,
        velocityX : 200,
        velocityY : 200,
@@ -381,6 +394,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
            lastAdvance : 0,
            INTERVAL : 80,
            execute : function(sprite,context,now) {
+              heroSprite.state = 'stand_left'; 
               if(now - this.lastAdvance > this.INTERVAL){
                 sprite.painter.advance();
                 this.lastAdvance = now;
@@ -393,6 +407,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
            lastAdvance : 0,
            INTERVAL : 80,
            execute : function(sprite,context,now) {
+              heroSprite.state = 'stand_right'; 
               if(now - this.lastAdvance > this.INTERVAL){
                 sprite.painter.advance();
                 this.lastAdvance = now;
@@ -405,6 +420,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
            lastAdvance : 0,
            INTERVAL : 80,
            execute : function(sprite,context,now) {
+              heroSprite.state = 'run_left';
               if (hero.timers.run_left.isRunning()) {
                   if(now - this.lastAdvance > this.INTERVAL){
                     sprite.painter.advance();
@@ -422,6 +438,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
          },{
             lastMove : 0,
             execute : function(sprite,context,now) {
+               heroSprite.state = 'run_left';
                if (hero.timers.run_left.isRunning()) {
                   //定时器超时
                   if(hero.timers.run_left.isOver()){
@@ -449,6 +466,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
            lastAdvance : 0,
            INTERVAL : 80,
            execute : function(sprite,context,now) {
+              heroSprite.state = 'run_right';
               if (hero.timers.run_right.isRunning()) {
                   if(now - this.lastAdvance > this.INTERVAL){
                     sprite.painter.advance();
@@ -466,6 +484,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
          },{
             lastMove : 0,
             execute : function(sprite,context,now) {
+               heroSprite.state = 'run_right';
                if (hero.timers.run_right.isRunning()) {
                   if(hero.timers.run_right.isOver()){
                      this.stop();
@@ -492,6 +511,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
               lastAdvance : 0,
               INTERVAL : 125,
               execute : function(sprite,context,now) {
+                heroSprite.state = 'jump_right'; 
                 if(hero.timers.jump_right.isRunning()){
                    if(hero.timers.jump_right.isOver()){
                        this.stop();
@@ -516,6 +536,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
             {
               lastMove : 0,
               execute : function(sprite,context,now) {
+                heroSprite.state = 'jump_right';  
                 if(hero.timers.jump_right.isRunning()){
                    if(hero.timers.jump_right.isOver()){
                        this.stop();
@@ -543,6 +564,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
               lastAdvance : 0,
               INTERVAL : 125,
               execute : function(sprite,context,now) {
+               heroSprite.state = 'fall_right';  
                if(hero.timers.fall_right.isRunning()){
                    if(hero.timers.fall_right.isOver()){
                        this.stop();
@@ -553,10 +575,6 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
                      this.lastAdvance = now;
                    }
                 }
-                else{
-                   heroSprite.painter = hero.painters.stand_right;
-                   heroSprite.behaviors = hero.actions.stand_right;
-                }
               },
               stop : function(){
                 hero.timers.fall_right.stop();
@@ -564,21 +582,31 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
               }
             },
             {
+              startTime : 0,
               lastMove : 0,
               execute : function(sprite,context,now) {
-                if(hero.timers.fall_right.isRunning()){
-                   if(hero.timers.fall_right.isOver()){
-                       this.stop();
-                       return;
-                   }
+                heroSprite.state = 'fall_right';
+                if(sprite.top + 50 < playCanvas.height){
                    if(this.lastMove !== 0){
                       sprite.top += (now - this.lastMove)/1000 * sprite.velocityY;
+                      //计算重力加速度下的速度
+                      sprite.velocityY = GRAVITY_FORCE * (now - this.startTime)/1000 * PIX_PER_METER;
+                   }
+                   else{
+                      //开始时间
+                      this.startTime = now;
+                      //开始时速度为0
+                      sprite.velocityY = 0;
                    }
                    this.lastMove = now;
                 }
                 else{
+                   //恢复速度
+                   sprite.velocityY = 200;
+                   sprite.top = playCanvas.height - 50;
                    heroSprite.painter = hero.painters.stand_right;
                    heroSprite.behaviors = hero.actions.stand_right;
+                   this.stop();
                 }
               },
               stop : function(){
@@ -604,6 +632,8 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
    heroSprite.left = hero.left;
    heroSprite.velocityX = hero.velocityX;
    heroSprite.velocityY = hero.velocityY;
+   //默认状态(stand,walk,run,jump,fall,sit,crouch...)
+   heroSprite.state = 'stand_right';
    game.addSprite(heroSprite);
 
    //加载图片
