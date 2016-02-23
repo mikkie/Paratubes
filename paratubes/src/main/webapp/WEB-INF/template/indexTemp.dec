@@ -51,9 +51,8 @@
     <script src="${rc.getContextPath()}/static/bootstrap/js/bootstrap.min.js"></script>
     <#include "/static/include/common.ftl">  
     ${body}
-    <footer>
+    <!--<footer>
       <div class="container-fluid">
-      <!-- JiaThis Button BEGIN -->
       <div class="jiathis_style shareTag" style="float:right;" data-url="http://www.yamixed.com" data-summary="Paratubes是一个在线二维虚拟人生游戏，你可以在这里与好友分享并创建属于自己的世界。" data-title="Paratubes" data-pic="http://www.yamixed.com/static/images/favicon.ico">
         <a class="jiathis_button_qzone"></a>
         <a class="jiathis_button_tsina"></a>
@@ -73,10 +72,9 @@
       }
       </script>
       <script type="text/javascript" src="http://v3.jiathis.com/code_mini/jia.js" charset="utf-8"></script>
-      <!-- JiaThis Button END -->
       <div style="clear:both;"><p>Copyright © 2015 Paratubes</p></div>
     </div> 
-  </footer>
+  </footer>-->
   <!--about my site-->
 <div class="modal fade" id="aboutSite" tabindex="-1" role="dialog" aria-labelledby="ParatubesLabel" aria-hidden="true">
   <div class="modal-dialog">
