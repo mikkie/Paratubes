@@ -394,6 +394,18 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
            lastAdvance : 0,
            INTERVAL : 80,
            execute : function(sprite,context,now) {
+              if(now - this.lastAdvance > this.INTERVAL){
+                sprite.painter.advance();
+                this.lastAdvance = now;
+              }
+           }
+         }
+         ],
+         stand_right : [
+         {
+           lastAdvance : 0,
+           INTERVAL : 80,
+           execute : function(sprite,context,now) {
               heroSprite.state = 'stand_left'; 
               if(now - this.lastAdvance > this.INTERVAL){
                 sprite.painter.advance();
