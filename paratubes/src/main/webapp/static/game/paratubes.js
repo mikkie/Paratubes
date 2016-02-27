@@ -203,6 +203,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
            return false;
         }
         hero.actions.run_right[1].stop();
+        hero.actions.jump_left[1].stop();
         hero.actions.jump_right[1].stop();   
         restartAnimation(hero.timers.run_left); 
         heroSprite.painter = hero.painters.run_left;
@@ -217,6 +218,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
            return false;
         }
         hero.actions.run_left[1].stop();
+        hero.actions.jump_left[1].stop();
         hero.actions.jump_right[1].stop();
         restartAnimation(hero.timers.run_right); 
         heroSprite.painter = hero.painters.run_right;
@@ -228,17 +230,31 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
    game.addKeyListener({
      key : 'up arrow',
      listener : function() {
-        if(heroSprite.state == 'fall_right'){
+        if(heroSprite.state.indexOf('fall') >= 0 || heroSprite.state.indexOf('jump') >= 0){
            return false;
         }
         hero.actions.run_left[1].stop();
         hero.actions.run_right[1].stop();
-        restartAnimation(hero.timers.jump_right); 
-        heroSprite.painter = hero.painters.jump_right;
-        heroSprite.behaviors = hero.actions.jump_right;
+        if(isLeftState()){
+          restartAnimation(hero.timers.jump_left); 
+          heroSprite.painter = hero.painters.jump_left;
+          heroSprite.behaviors = hero.actions.jump_left;
+        }
+        else{
+          restartAnimation(hero.timers.jump_right); 
+          heroSprite.painter = hero.painters.jump_right;
+          heroSprite.behaviors = hero.actions.jump_right;
+        }
         heroSprite.painter.cellIndex = 0;
      }
    });
+
+
+   //状态为左
+   var isLeftState = function(){
+      return heroSprite.state.indexOf('left') >= 0;
+   };
+
 
    //更新画笔  
    $('.painter').click(function() {
@@ -306,8 +322,16 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
             src : ctx + '/static/images/game/people/man/run_right.png',
             image : new Image()
           },
+          jump_left : {
+            src : ctx + '/static/images/game/people/man/jump_left.png',
+            image : new Image()
+          },
           jump_right : {
             src : ctx + '/static/images/game/people/man/jump_right.png',
+            image : new Image()
+          },
+          fall_left : {
+            src : ctx + '/static/images/game/people/man/fall_left.png',
             image : new Image()
           },
           fall_right : {
@@ -316,6 +340,26 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
           }
        }
    };
+
+   
+   //返回地面
+   var backToGround = function(isLeft){
+      if(heroSprite.top + 50 < playCanvas.height){
+          if(isLeft){
+             hero.timers.fall_left.start(); 
+          }
+          else{
+             hero.timers.fall_right.start(); 
+          }
+          heroSprite.painter = isLeft ? hero.painters.fall_left : hero.painters.fall_right;
+          heroSprite.behaviors = isLeft ? hero.actions.fall_left : hero.actions.fall_right;
+      }
+      else{
+          heroSprite.painter = isLeft ? hero.painters.stand_left : hero.painters.stand_right;
+          heroSprite.behaviors = isLeft ? hero.actions.stand_left : hero.actions.stand_right;
+      }
+   };
+
 
    //精灵 
    var hero = {
@@ -327,7 +371,9 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
        timers : {
          run_left : new AnimationTimer(225),
          run_right : new AnimationTimer(225),
+         jump_left : new AnimationTimer(625),
          jump_right : new AnimationTimer(625),
+         fall_left : new AnimationTimer(625),
          fall_right : new AnimationTimer(625)
        },
        painters : {
@@ -373,6 +419,13 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
          { left: 221,   top: 0, width: 21, height: 50 },
          { left: 242,   top: 0, width: 25, height: 50 }
          ],spritesheet.hero.run_right.image),
+         jump_left : new SpriteSheetPainter([
+         { left: 0,   top: 0, width: 22, height: 50 },
+         { left: 22,   top: 0, width: 25, height: 50 },
+         { left: 47,   top: 0, width: 23, height: 50 },
+         { left: 70,   top: 0, width: 24, height: 50 },
+         { left: 94,   top: 0, width: 25, height: 50 }
+          ],spritesheet.hero.jump_left.image),
          jump_right : new SpriteSheetPainter([
          { left: 0,   top: 0, width: 22, height: 50 },
          { left: 22,   top: 0, width: 25, height: 50 },
@@ -380,6 +433,13 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
          { left: 70,   top: 0, width: 24, height: 50 },
          { left: 94,   top: 0, width: 26, height: 50 }
           ],spritesheet.hero.jump_right.image),
+         fall_left : new SpriteSheetPainter([
+         { left: 0,   top: 0, width: 25, height: 50 },
+         { left: 25,   top: 0, width: 22, height: 50 },
+         { left: 47,   top: 0, width: 19, height: 50 },
+         { left: 66,   top: 0, width: 18, height: 50 },
+         { left: 84,   top: 0, width: 17, height: 50 }
+          ],spritesheet.hero.fall_left.image),
          fall_right : new SpriteSheetPainter([
          { left: 0,   top: 0, width: 26, height: 50 },
          { left: 26,   top: 0, width: 23, height: 50 },
@@ -431,8 +491,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
                   }
               }
               else{
-                  heroSprite.painter = hero.painters.stand_left;
-                  heroSprite.behaviors = hero.actions.stand_left;
+                  backToGround(true);
               }
            }
          },{
@@ -451,8 +510,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
                   this.lastMove = now;
                }
                else{
-                  heroSprite.painter = hero.painters.stand_left;
-                  heroSprite.behaviors = hero.actions.stand_left;
+                  backToGround(true);
                }
             },
             stop : function(){
@@ -477,8 +535,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
                   }
               }
               else{
-                  heroSprite.painter = hero.painters.stand_right;
-                  heroSprite.behaviors = hero.actions.stand_right;
+                 backToGround(); 
               }
            }
          },{
@@ -496,8 +553,7 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
                   this.lastMove = now;
                }
                else{
-                  heroSprite.painter = hero.painters.stand_right;
-                  heroSprite.behaviors = hero.actions.stand_right;
+                  backToGround();
                }
             },
             stop : function(){
@@ -505,6 +561,59 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
                this.lastMove = 0;
             } 
          }
+         ],
+         jump_left : [
+            {
+              lastAdvance : 0,
+              INTERVAL : 125,
+              execute : function(sprite,context,now) {
+                heroSprite.state = 'jump_left'; 
+                if(hero.timers.jump_left.isRunning()){
+                   if(hero.timers.jump_left.isOver()){
+                       this.stop();
+                       return;
+                   }
+                   if(now - this.lastAdvance > this.INTERVAL){
+                     sprite.painter.advance(true);
+                     this.lastAdvance = now;
+                   }
+                }
+                else{
+                   hero.timers.fall_left.start(); 
+                   heroSprite.painter = hero.painters.fall_left;
+                   heroSprite.behaviors = hero.actions.fall_left;
+                }
+              },
+              stop : function(){
+                hero.timers.jump_left.stop();
+                this.lastAdvance = 0;
+              }
+            },
+            {
+              lastMove : 0,
+              execute : function(sprite,context,now) {
+                heroSprite.state = 'jump_left';  
+                if(hero.timers.jump_left.isRunning()){
+                   if(hero.timers.jump_left.isOver()){
+                       this.stop();
+                       return;
+                   }
+                   if(this.lastMove !== 0){
+                      sprite.top -= (now - this.lastMove)/1000 * sprite.velocityY;
+                   }
+                   this.lastMove = now;
+                }
+                else{
+                   hero.timers.fall_left.start(); 
+                   heroSprite.painter = hero.painters.fall_left;
+                   heroSprite.behaviors = hero.actions.fall_left;
+                }
+              },
+              stop : function(){
+                hero.timers.jump_left.stop();
+                this.lastMove = 0;
+              }
+            }
          ],
          jump_right : [
             {
@@ -555,6 +664,62 @@ window.com.paratubes.initGame = function(w,canvasId,$) {
               },
               stop : function(){
                 hero.timers.jump_right.stop();
+                this.lastMove = 0;
+              }
+            }
+         ],
+         fall_left : [
+            {
+              lastAdvance : 0,
+              INTERVAL : 125,
+              execute : function(sprite,context,now) {
+               heroSprite.state = 'fall_left';  
+               if(hero.timers.fall_left.isRunning()){
+                   if(hero.timers.fall_left.isOver()){
+                       this.stop();
+                       return;
+                   }
+                   if(now - this.lastAdvance > this.INTERVAL){
+                     sprite.painter.advance(true);
+                     this.lastAdvance = now;
+                   }
+                }
+              },
+              stop : function(){
+                hero.timers.fall_left.stop();
+                this.lastAdvance = 0;
+              }
+            },
+            {
+              startTime : 0,
+              lastMove : 0,
+              execute : function(sprite,context,now) {
+                heroSprite.state = 'fall_left';
+                if(sprite.top + 50 < playCanvas.height){
+                   if(this.lastMove !== 0){
+                      sprite.top += (now - this.lastMove)/1000 * sprite.velocityY;
+                      //计算重力加速度下的速度
+                      sprite.velocityY = GRAVITY_FORCE * (now - this.startTime)/1000 * PIX_PER_METER;
+                   }
+                   else{
+                      //开始时间
+                      this.startTime = now;
+                      //开始时速度为0
+                      sprite.velocityY = 0;
+                   }
+                   this.lastMove = now;
+                }
+                else{
+                   //恢复速度
+                   sprite.velocityY = 200;
+                   sprite.top = playCanvas.height - 50;
+                   heroSprite.painter = hero.painters.stand_left;
+                   heroSprite.behaviors = hero.actions.stand_left;
+                   this.stop();
+                }
+              },
+              stop : function(){
+                hero.timers.fall_left.stop();
                 this.lastMove = 0;
               }
             }
